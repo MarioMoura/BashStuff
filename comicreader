@@ -1,1 +1,13 @@
-/home/mario/.scripts/comicreader
+#!/bin/bash
+# Can be used to read the formats
+# - cbr
+# - cbz
+
+USAGE="comicreader <file.[cbr|cbz]"
+
+[ $1 ] || { echo "$USAGE"; exit 1; }
+
+mkdir /tmp/$1
+unrar e $1 /tmp/$1/
+feh --zoom 35 /tmp/$1/
+rm -rf /tmp/$1/

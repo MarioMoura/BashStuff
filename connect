@@ -1,1 +1,65 @@
-/home/mario/.scripts/connect
+#/bin/bash
+#
+# Program to simply help at the wifi connect with nmcli
+# obviously nmcli is required
+#
+#
+
+
+function connect {
+	# get the list of SSIDs
+	LIST=$(nmcli -f SSID d wifi | sed -n -e '2,$p')
+
+	# get the chosen one
+	CHOICE=$(echo "$LIST" | dmenu -p "Choose" -fn "PxPlus IBM VGA8" -nb "#202020" -sb "#0000ff" -l 6 )
+	[ $CHOICE ] || exit 1
+
+	PASS=$(echo "" | dmenu -p "Password for:" -fn "PxPlus IBM VGA8" -nb "#202020" -sb "#0000ff"  | cut -d " " -f 3)
+	
+	# the password can be non-existent
+	# therefore if it is not the prefix
+	# "password" must be inserted
+	if [ -n "$PASS" ]; then 
+		PASS="password $PASS"
+	fi
+
+	nmcli device wifi connect $CHOICE $PASS
+
+	if [ $? -eq 0 ]; then
+		notify-send "Connected" 
+	else
+		notify-send "Connection failed"
+	fi
+
+}
+
+function disconnect {
+	# get the connections list
+	CONN=$( nmcli -f NAME c | sed -n -e '2p')
+	nmcli c down $CONN
+}
+
+function delete {
+	DELETE=$(nmcli -t c | cut -d ":" -f 1 | dmenu -p "Delete what ?" -fn "PxPlus IBM VGA8" -nb "#202020" -sb "#0000ff" -l 7)
+	CONFIRMATION=$(echo -e "Yes\nNo" | dmenu -p "Are you Sure ?" -fn "PxPlus IBM VGA8" -nb "#202020" -sb "#0000ff" )
+
+	if [ "$DELETE" = Yes ]; then
+		nmcli c delete id "$DELETE"
+	fi
+}
+
+OPTIONS="connect
+disconnect
+delete"
+
+
+OPTIONS=$(echo -e "$OPTIONS" | dmenu -fn "PxPlus IBM VGA8" -nb "#202020" -sb "#0000ff" -l 6)
+
+case $OPTIONS in
+
+	connect) 	connect		;;
+	disconnect) disconnect	;;
+	delete) 	delete		;;
+
+esac
+
