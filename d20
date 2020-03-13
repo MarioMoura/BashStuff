@@ -1,0 +1,11 @@
+#!/bin/bash
+USAGE="d20 <number of rolls> <increment>"
+
+[ -z $1 ] && { echo "$USAGE"; exit 1; }
+
+INC=$2
+for i in $(seq $1); do
+	NUM=$(( $RANDOM % 20 + 1))
+	[ -n "$INC" ] && echo  "roll $NUM + $INC"
+	echo $(( $NUM  + ${INC:-0} ))
+done

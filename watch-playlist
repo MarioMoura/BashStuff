@@ -1,0 +1,12 @@
+#/bin/bash!
+# A Program that reads the Playlist folder
+# then starts mpv as a playlist with the
+# chosen file
+# 
+# to create such a file use
+#   $ cd /directory/of/your/files
+# 	$ find $(pwd) | sort > playlist_file
+
+CHOICE=$( ls ~/Playlists | dmenu -l 10 )
+[ "$CHOICE" ] || exit 0
+mpv --pause --save-position-on-quit --playlist=/home/mario/Playlists/${CHOICE}

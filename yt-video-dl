@@ -1,0 +1,32 @@
+#/bin/bash!
+# Program that prompts the user with a search 
+# then downloads the video
+
+# There is now an error that has to do with
+# the google api keys
+# A way to solve it is described here
+# https://bbs.archlinux.org/viewtopic.php?id=253180
+
+
+SEARCH=$(echo "" | mydmenu -p "Search:") 
+
+RESULT=$(youtube-viewer --no-interactive --custom-layout "$SEARCH")
+
+CHOICE=$(echo "$RESULT" | sed "s/:::.*//" | mydmenu -l 15 )
+
+URL=$(echo "$RESULT" | grep -F "$CHOICE" | sed "s/.*::://") 
+NAME=$(echo "$RESULT" | grep -F "$CHOICE" | sed "s/:::.*//" )
+
+notify-send "Downloading video $NAME"
+# alter the destination dir here
+# 				vvvvvvvvv
+youtube-dl -o "~/videos/%(title)s.%(ext)s"  $URL
+
+
+
+
+
+
+
+
+

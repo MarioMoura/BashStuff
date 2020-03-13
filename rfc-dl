@@ -1,0 +1,14 @@
+#!/bin/bash
+# A program to download RFCs
+
+USAGE="Usage: rfc <number ...>"
+
+[ -z $1 ] && { echo "$USAGE"; exit 1; }
+
+NUMBERS="$@"
+
+URLS=$(echo "$NUMBERS" | sed "s|[0-9]*|http://www.rfc-editor.org/pdfrfc/rfc&.txt.pdf|g" )
+
+echo $URLS
+
+wget $URLS 
