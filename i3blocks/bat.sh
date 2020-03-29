@@ -8,11 +8,13 @@
 #now=$(cat /sys/class/power_supply/BAT0/uevent | grep -o "\w*\w" | head -n 23 | tail -n 1)
 #result=$(awk "BEGIN{printf \"%.3f\" , ($now * 100 / $total )} ")
 
-TOTAL=$( sed -ne '10p' /sys/class/power_supply/BAT0/uevent )
-NOW=$( sed -ne '11p' /sys/class/power_supply/BAT0/uevent )
+#TOTAL=$( sed -ne '10p' /sys/class/power_supply/BAT0/uevent )
+#NOW=$( sed -ne '11p' /sys/class/power_supply/BAT0/uevent )
+#RESULT=$( printf "%.3f" $(( ${NOW##*=} * 100 / ${TOTAL##*=} )))
+FULL=$( cat /sys/class/power_supply/BAT0/energy_full )
+NOW=$( cat /sys/class/power_supply/BAT0/energy_now )
 
-RESULT=$( printf "%.3f" $(( ${NOW##*=} * 100 / ${TOTAL##*=} )))
-
+RESULT=$( printf "%.3f" $(echo "$NOW / $FULL * 100" | bc))
 echo "Battery: $RESULT%"
 echo "Bat: $RESULT%"
 
