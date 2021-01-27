@@ -1,0 +1,52 @@
+#!/bin/bash
+
+USAGE="Usage: pdfminibook [FILE]"
+
+if [ -z "$1" ]
+then
+	echo "ERROR: Missing Argument"
+	echo "$USAGE"
+	exit 1;
+fi
+
+if [ "$1" = "-h" -o "$1" = "--help" ]
+then
+	echo "$USAGE"
+	exit 1;
+fi
+
+
+PDF=$1
+shift
+
+PAGES=$(pdfinfo $PDF | sed -n 's/Pages:[ ]*\([0-9]*\)/\1/p')
+LOOPS=$(( $PAGES / 4 ))
+ORDER=""
+
+OUT="out.pdf"
+
+echo $PAGES
+echo $LOOPS
+
+for X in $(seq 0 $LOOPS)
+do
+	ORDER+="$((1+$X*4)),$((3+$X*4)),$((4+$X*4)),$((2+$X*4))"
+	if [ "$X" != "$LOOPS" ]
+	then
+		ORDER+=","
+	fi
+done
+ORDER=$(echo "$ORDER" | awk -v pagemax=$PAGES 'BEGIN{FS=","} { split($0,arr,","); for(i in arr){ if(arr[i] > pagemax ){ arr[i] = "{}" } }} END{ for( i in arr){ endstr= endstr arr[i] "," } print endstr}' )
+
+ORDER=${ORDER%,}
+echo "$@"
+
+pdfjam --nup 2x1 --landscape $PDF $ORDER -o $OUT
+
+pdfjam --twoside --angle 90 $OUT 1- --paper a4paper -o $OUT $@
+
+N_PAGES=$(pdfinfo $OUT | sed -n 's/Pages:[ ]*\([0-9]*\)/\1/p')
+
+pdfjam $OUT $(seq -s, 1 2 $N_PAGES) -o out-odd.pdf
+
+pdfjam $OUT $(seq -s, 2 2 $N_PAGES) -o out-even.pdf

@@ -1,0 +1,112 @@
+#!/bin/bash
+# Program to create indexes(bookmarks) in pdfs
+
+
+USAGE="pdfindex -f <pdffile> -o <outfile> -r <indexfile>
+		-s <separator>  Change the separators in the index file(\":\" default)
+		-n              Dont strip the bookmarks from the orignal file
+		-h              Show this Help"
+
+INDEX_FILE="5:Summary
+15:Preface
+p:5:25:Chapter 1
+35:SubChap1
+45:SubChap2
+55:SubChap3
+65:SubChap4
+75:SubChap5"
+
+PDF=""
+INDEX=""
+SEP=":"
+NO_STRP="false"
+TMP_PDF_FILE="/tmp/$(date +%s).pdf"
+
+while getopts ":f:o:r:hs:ne" opt
+do
+	case $opt in
+		h)
+			# Help usage
+			echo "$USAGE";
+			exit 0;
+			;;
+		e)
+			# Index File Exemple
+			echo "$INDEX_FILE";
+			exit 0;
+			;;
+		n)
+			# No strip option
+			NO_STRP="true"
+			;;
+		f)
+			# Input PDF file
+			PDF=$OPTARG
+			;;
+		s)
+			# Separator
+			SEP=$OPTARG
+			;;
+		o)
+			# Output file
+			PDF_OUT=$OPTARG
+			;;
+		r)
+			# Index input file
+			INDEX=$OPTARG
+			;;
+		\?)
+			# Unknown Option
+			echo "unknown opt -$OPTARG"
+			;;
+		:)
+			# Missing Argument
+			echo "missing argument for opt: -$OPTARG"
+			exit 1;
+			;;
+	esac
+done
+
+if [ -z "$PDF_OUT" ]
+then
+	PDF_OUT="${PDF%.pdf}_indexed.pdf"
+fi
+
+if [ -z "$PDF" ]
+then
+	echo "ERROR: Missing -f option"
+	echo "$USAGE";
+	exit 1
+fi
+
+if [ -z "$INDEX" ]
+then
+	echo "ERROR: Missing -r option"
+	echo "$USAGE";
+	exit 1
+fi
+
+if [ "$(file $PDF | grep 'PDF document' -c)" -ne "1" ]
+then
+	echo "ERROR: $PDF is not a PDF file"
+	exit 1
+fi 
+
+if [ "$NO_STRP" = "false" ]
+then
+	# Removing the bookmarks
+	pdfjam $PDF 1- -o $TMP_PDF_FILE
+	PDF=$TMP_PDF_FILE
+fi
+
+# Parsing the index file
+GS_INFO=$(sed -E -e "s|^([0-9]{1,})${SEP}(.*)|[/Page \1 /View [/XYZ null null null] /Title (\2) /OUT pdfmark|g" $INDEX | sed -E -e "s|^p${SEP}([0-9]{1,})${SEP}([0-9]{1,})${SEP}(.*)|[/Count \1 /Page \2 /View [/XYZ null null null] /Title (\3) /OUT pdfmark|g")
+
+# Writing the bookmarks
+gs -sDEVICE=pdfwrite -q -dBATCH -dNOPAUSE -sOutputFile=${PDF_OUT} <(echo "$GS_INFO") -f $PDF
+
+if [ "$NO_STRP" = "false" ]
+then
+	rm $TMP_PDF_FILE
+fi
+

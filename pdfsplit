@@ -1,0 +1,11 @@
+#!/bin/bash
+# Simply split a pdf into odd and even pages
+
+PDF=$1
+shift
+
+N_PAGES=$(pdfinfo $PDF | sed -n 's/Pages:[ ]*\([0-9]*\)/\1/p')
+
+pdfjam $PDF $(seq -s, 1 2 $N_PAGES) -o ${PDF}-odd.pdf
+
+pdfjam $PDF $(seq -s, 2 2 $N_PAGES) -o ${PDF}-even.pdf
